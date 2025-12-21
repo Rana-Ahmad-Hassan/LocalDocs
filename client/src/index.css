@@ -1,0 +1,24 @@
+/* Container for the remote cursor */
+.ProseMirror-yjs-cursor {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  border-color: orange; /* Default, overridden by user color */
+  word-break: normal;
+  pointer-events: none;
+}
+
+/* The name tag above the cursor */
+.ProseMirror-yjs-cursor > div {
+  position: absolute;
+  top: -1.05em;
+  left: -1px;
+  font-size: 13px;
+  background-color: orange;
+  color: white;
+  padding: 0 4px;
+  white-space: nowrap;
+  user-select: none;
+}
