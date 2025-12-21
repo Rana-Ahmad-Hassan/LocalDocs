@@ -1,78 +1,148 @@
-LocalDocs: Real-Time Collaborative Engine
-LocalDocs is a high-performance document editing platform designed for teams that require instant, conflict-free collaboration. It re-engineers the "Google Docs experience" using a modern, stateless backend and a CRDT-based frontend for seamless multi-user editing.
+# LocalDocs
 
-💡 The Problem
-In standard web apps, if two people edit the same sentence at once, one person's work usually gets overwritten. LocalDocs solves this using Conflict-free Replicated Data Types (CRDTs), ensuring every user's cursor and keystroke is synchronized in sub-100ms, regardless of network latency.
+Real-time, conflict-free collaborative document editor built for teams that need instant, reliable collaboration.
 
-🚀 Core Features
-Real-time Collaboration: Powered by Yjs and WebSockets, allowing for dozens of concurrent editors with zero merge conflicts.
+LocalDocs delivers a Google‑Docs-like experience using modern CRDTs and a performant WebSocket sync layer — engineered for low-latency editing, robust presence, and scalable persistence.
 
-Presence Awareness: See who else is in the document with real-time cursor tracking and name labels.
+---
 
-Rich Text Architecture: Built on ProseMirror, providing a robust schema for complex formatting, lists, and images.
+## Key features
 
-Smart Persistence: Optimized MongoDB syncing using a debounced save layer—your server won't crash from constant database writes every time a user types a letter.
+- Real-time collaboration with zero merge conflicts (Yjs / CRDTs)
+- Rich text editing powered by ProseMirror with a custom schema
+- Live presence and cursor awareness for active collaborators
+- Optimized persistence: debounced MongoDB saves to reduce load
+- Socket-based sync via Socket.io (WebSockets)
+- Secure access control and JWT-based authentication
+- Extensible architecture suitable for production deployment
 
-Auth-Integrated Permissions: Private documents accessible only to the owner and invited collaborators.
+---
 
-🛠 Engineering Stack
-Frontend: React.js, TypeScript, Tailwind CSS
+## Technology stack
 
-Editor Core: ProseMirror (Custom Schema)
+- Frontend: React, TypeScript, Tailwind CSS
+- Editor Core: ProseMirror (custom schema)
+- Real-time sync: Yjs (CRDT) + Socket.io
+- Backend: Node.js, Express
+- Database: MongoDB (Mongoose)
+- Auth: JWT with HttpOnly cookies
 
-Sync Engine: Yjs (CRDTs)
+---
 
-Communication: Socket.io (WebSockets)
+## How it works (high level)
 
-Backend: Node.js, Express.js
+1. CRDT-based syncing (Yjs)
+   - Clients produce compact, deterministic updates. Changes are broadcast to peers and merged without conflicts.
 
-Database: MongoDB (using Mongoose)
+2. Persistence bridge
+   - The in-memory CRDT state is periodically persisted to MongoDB via a debounced persistence provider to avoid constant writes during typing bursts.
 
-Authentication: JWT with HttpOnly Cookies
+3. Access control
+   - Document requests validate against a collaborators list in MongoDB. Unauthorized WebSocket attempts are rejected at connect time.
 
-🏗 Technical Deep Dive: How it works
-1. Conflict Resolution (Yjs)
-Instead of sending the whole document back and forth, LocalDocs sends "binary updates." When User A types, Yjs calculates the exact change and broadcasts it via WebSockets. User B’s client merges that change into their local state automatically.
+---
 
-2. The Persistence Bridge
-Since Yjs works in memory, saving to a database like MongoDB can be expensive. We implemented a persistence provider that listens to changes and "debounces" the save process.
+## Quickstart
 
-Technical Note: The document is only written to the database once the users stop typing for a set interval, significantly reducing server load.
+Prerequisites:
+- Node.js (>=16)
+- npm (>=8) or yarn
+- MongoDB instance (local or hosted)
 
-3. Permissions & Security
-Every document request is validated against a collaborators array in MongoDB. If you aren't on the list, the WebSocket connection is rejected before you even see a single character.
+Clone the repo and install dependencies:
 
-🚦 Getting Started
-1. Clone & Install
-Bash
-
-git clone https://github.com/ranaahmadhassan/localdocs.git
-cd localdocs
+```bash
+git clone https://github.com/Rana-Ahmad-Hassan/LocalDocs.git
+cd LocalDocs
 npm install
-2. Environment Setup
-Create a .env file:
+```
 
-Code snippet
+Create a `.env` in the project root with the following values:
 
+```env
 PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_key
+MONGO_URI=<your_mongodb_connection_string>
+JWT_SECRET=<your_jwt_secret>
 CLIENT_URL=http://localhost:5173
-3. Run Development
-Bash
+```
 
-# Start Backend
+Start the development servers:
+
+```bash
+# Start backend server
 npm run server
 
-# Start Frontend
+# Start frontend dev server
 npm run dev
-📈 Challenges I Overcame
-The "Double Save" Bug: Fixed issues where rapid typing caused MongoDB version conflicts by implementing a locking mechanism during the save cycle.
+```
 
-Initial Load Latency: Optimized the initial document fetch by populating only essential metadata, then lazy-loading the full CRDT state once the WebSocket connects.
+Open the client URL in your browser (usually `http://localhost:5173`) and connect to or create a document.
 
-🤝 Contributing
-Found a bug? Want to add a feature? Open an issue or submit a PR. Let's build the fastest editor together!
+---
 
-Author
-Rana Ahmad Hassan
+## Running in production
+
+- Build the frontend and serve static assets from your preferred host (Netlify, Vercel, S3 + CloudFront, or a server).
+- Host the backend behind a process manager (PM2, systemd) or containerize it (Docker).
+- Use a managed MongoDB instance for reliability and scale.
+- Configure HTTPS and secure your JWT secret and cookie settings.
+
+Sample Docker + production tips:
+- Use environment variables or a secrets manager for credentials.
+- Consider sticky sessions or a shared WebSocket adapter (Redis) for multi-instance scaling.
+- Backup CRDT snapshots and implement migration hooks for schema changes.
+
+---
+
+## Environment & configuration
+
+Important environment variables:
+- PORT — backend port (default: 5000)
+- MONGO_URI — MongoDB connection URI
+- JWT_SECRET — secret for signing JWTs
+- CLIENT_URL — allowed origin for CORS and cookie redirects
+
+Logging and metrics:
+- Enable appropriate logging (info / warn / error) and export metrics for connection counts, latency, and persistence rates.
+
+---
+
+## Security & privacy
+
+- Authentication uses signed JWTs stored in HttpOnly cookies to minimize XSS risk.
+- Authorization checks are enforced on both HTTP endpoints and WebSocket connections.
+- Validate and sanitize user-supplied content before persisting or rendering.
+
+---
+
+## Troubleshooting
+
+- "Double save" or version conflicts: ensure the persistence provider’s debouncing/locking is enabled and MongoDB write concerns are configured correctly.
+- High initial load latency: consider lazy-loading the full CRDT state after returning essential metadata and a lightweight placeholder.
+- Connection drops at scale: verify Socket.io adapter configuration (Redis adapter) and increase connection limits or implement horizontal scaling strategies.
+
+---
+
+## Contributing
+
+Contributions are welcome. Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Implement changes and add tests where relevant
+4. Open a pull request describing the change and the motivation
+
+For bug reports or feature requests, please open an issue with reproduction steps and expected behavior.
+
+---
+
+## Attribution & license
+
+This project is MIT licensed. See the LICENSE file for details.
+
+---
+
+## Author
+
+Rana Ahmad Hassan  
+https://github.com/Rana-Ahmad-Hassan
