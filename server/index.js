@@ -24,13 +24,9 @@ const app = express();
 const httpServer = createServer(app);
 
 //middlewares
-
 const corsOptions = {
-    // 1. Explicitly allow your frontend URL (NO trailing slash!)
     origin: "http://localhost:5173",
-    // 2. Allow cookies to be sent back and forth
     credentials: true,
-    // 3. Common methods used in REST
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 };

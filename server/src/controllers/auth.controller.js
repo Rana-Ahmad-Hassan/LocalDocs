@@ -18,7 +18,6 @@ export const register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 4. Create User
         const user = await User.create({
             username,
             email,
@@ -39,7 +38,6 @@ export const login = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-        // 2. Compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
@@ -61,7 +59,7 @@ export const logout = (req, res) => {
 
 export const getMe = async (req, res) => {
     try {
-        const token = req.cookies.token; // Accessing the cookie via cookie-parser
+        const token = req.cookies.token;
 
         if (!token) return res.status(401).json({ message: "Not logged in" });
 

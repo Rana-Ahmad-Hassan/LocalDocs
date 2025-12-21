@@ -33,10 +33,9 @@ export const getDocById = async (req, res) => {
 }
 
 export const getUserDocs = async (req, res) => {
-    const userId = req.user; // Ensure this is the ID string
+    const userId = req.user;
 
     try {
-        // 1. Fetch all documents where user is involved
         const allDocs = await Doc.find({
             $or: [
                 { creator: userId },
@@ -46,8 +45,7 @@ export const getUserDocs = async (req, res) => {
             .populate("creator", "-password")
             .sort({ updatedAt: -1 });
 
-        // 2. Separate into two arrays using JavaScript filter
-        // We use .toString() to compare MongoDB ObjectIds accurately
+      
         const myDocs = allDocs.filter(
             doc => doc.creator._id.toString() === userId.toString()
         );
@@ -56,7 +54,6 @@ export const getUserDocs = async (req, res) => {
             doc => doc.creator._id.toString() !== userId.toString()
         );
 
-        // 3. Return both arrays in a single object
         res.status(200).json({
             myDocs,
             sharedDocs
