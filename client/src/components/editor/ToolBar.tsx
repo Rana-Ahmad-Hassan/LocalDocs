@@ -16,6 +16,7 @@ import {
   Redo,
 } from "lucide-react";
 import { undo, redo } from "prosemirror-history";
+import CommentSidebar from "../ui/Comments";
 
 import { Share2 } from "lucide-react"; // Import Share icon
 
@@ -23,6 +24,9 @@ import { Share2 } from "lucide-react"; // Import Share icon
 interface ToolbarProps {
   editorView: EditorView | null;
   onShareClick: () => void; // Add this
+  addComment: (text: string) => void;
+  yComments: any;
+  getSelectedCommentId: (id: string) => void;
 }
 
 // Helper to check if a mark (like bold) is active
@@ -63,7 +67,13 @@ const ToolbarButton = ({
   </button>
 );
 
-export const EditorToolbar = ({ editorView, onShareClick }: ToolbarProps) => {
+export const EditorToolbar = ({
+  editorView,
+  onShareClick,
+  addComment,
+  yComments,
+  getSelectedCommentId
+}: ToolbarProps) => {
   if (!editorView) return null;
 
   const { state, dispatch } = editorView;
@@ -149,6 +159,7 @@ export const EditorToolbar = ({ editorView, onShareClick }: ToolbarProps) => {
           Share
         </button>
       </div>
+      <CommentSidebar addComment={addComment} yComments={yComments} getSelectedCommentId={getSelectedCommentId} />
     </div>
   );
 };
