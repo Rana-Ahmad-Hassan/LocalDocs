@@ -126,7 +126,7 @@ export const GoogleDocsEditor = ({ handleAddColaborator }: any) => {
     const comment = {
       id: crypto.randomUUID(),
       author: user?._id,
-      authorName: user?.username, // Added for UI display
+      authorName: user?.username, 
       text,
       from,
       to,
@@ -135,7 +135,6 @@ export const GoogleDocsEditor = ({ handleAddColaborator }: any) => {
     };
     yComments.set(String(comment.id), comment);
 
-    // Clear Floating UI
     setTempCommentText("");
     setIsInputVisible(false);
   };
@@ -167,35 +166,44 @@ export const GoogleDocsEditor = ({ handleAddColaborator }: any) => {
     setSelectedCommentId(id);
   };
 
+  const handleResolveComment = (commentId: string) => {
+    if (!commentId) return;
+    console.log(commentId, "id for resolve")
+    const findCommentByIdAndDelete: any = yComments.get(commentId);
+    findCommentByIdAndDelete.resolved = true;
+    alert("Comment is resloved");
+  };
+
   return (
-    <div className="flex flex-col h-screen w-full bg-[#f9fbfd] relative">
+    <div className="flex flex-col h-screen w-full bg-gray-50 relative">
       <EditorToolbar
         editorView={editorView}
         yComments={yComments}
         addComment={addComment}
         onShareClick={() => setIsShareModalOpen(true)}
         getSelectedCommentId={handleGetSelectedCommentId}
+        resolveComment={handleResolveComment}
       />
 
-      <div className="flex justify-center py-8   relative">
-        <div className="bg-white border border-gray-300 w-full max-w-[816px] min-h-[900px] shadow-sm border border-gray-200 relative">
-          <div ref={editorRef} />
+      <div className="flex justify-center py-8 relative">
+        <div className="bg-white w-full max-w-[816px] min-h-[900px] shadow-sm border border-gray-200 relative">
+          <div className="border h-screen border-gray-300"  ref={editorRef} />
 
           {/* FLOATING COMMENT BUTTON */}
           {floatingPos && !isInputVisible && (
             <button
               onClick={() => setIsInputVisible(true)}
-              className="fixed z-50 p-2 bg-white text-blue-600 rounded-full shadow-lg border border-gray-200 hover:scale-110 transition-all"
+              className="fixed z-50 p-2 bg-white text-gray-700 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
               style={{ top: floatingPos.top - 15, left: "calc(50% + 420px)" }}
             >
-              <MessageSquarePlus size={20} />
+              <MessageSquarePlus size={18} strokeWidth={2} />
             </button>
           )}
 
           {/* FLOATING COMMENT INPUT */}
           {isInputVisible && (
             <div
-              className="fixed  w-64 bg-white rounded-xl shadow-2xl border border-gray-300 p-4"
+              className="fixed w-64 bg-white rounded-lg shadow-lg border border-gray-200 p-4"
               style={{
                 top: floatingPos ? floatingPos.top - 20 : 100,
                 left: "calc(50% + 425px)",
@@ -205,19 +213,19 @@ export const GoogleDocsEditor = ({ handleAddColaborator }: any) => {
                 autoFocus
                 value={tempCommentText}
                 onChange={(e) => setTempCommentText(e.target.value)}
-                placeholder="Type your comment..."
-                className="w-full rounded-xl p-3 text-sm border-none focus:ring-0 p-0 mb-3 resize-none min-h-[60px]"
+                placeholder="Add a comment..."
+                className="w-full text-sm border border-gray-200 rounded p-2 mb-3 resize-none min-h-[60px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setIsInputVisible(false)}
-                  className="text-sm cursor-pointer"
+                  className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => addComment(tempCommentText)}
-                  className="bg-blue-600 cursor-pointer text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
+                  className="bg-gray-900 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-800 transition-colors"
                 >
                   Comment
                 </button>

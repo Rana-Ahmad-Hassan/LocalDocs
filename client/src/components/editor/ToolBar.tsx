@@ -18,15 +18,15 @@ import {
 import { undo, redo } from "prosemirror-history";
 import CommentSidebar from "../ui/Comments";
 
-import { Share2 } from "lucide-react"; // Import Share icon
+import { Share2 } from "lucide-react";
 
-// ... in your EditorToolbar props, add a function to open the modal
 interface ToolbarProps {
   editorView: EditorView | null;
-  onShareClick: () => void; // Add this
+  onShareClick: () => void;
   addComment: (text: string) => void;
   yComments: any;
   getSelectedCommentId: (id: string) => void;
+  resolveComment: (id: string) => void;
 }
 
 // Helper to check if a mark (like bold) is active
@@ -35,10 +35,6 @@ const isMarkActive = (state: EditorState, markType: any) => {
   if (empty) return markType.isInSet(state.storedMarks || $from.marks());
   return state.doc.rangeHasMark(from, to, markType);
 };
-
-interface ToolbarProps {
-  editorView: EditorView | null;
-}
 
 const ToolbarButton = ({
   onClick,
@@ -58,9 +54,9 @@ const ToolbarButton = ({
     }}
     disabled={disabled}
     className={`
-      p-1.5 rounded text-sm transition-colors
-      ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-200"}
-      ${isActive ? "bg-blue-100 text-blue-700" : "text-gray-700"}
+      p-2 rounded transition-colors
+      ${disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}
+      ${isActive ? "bg-gray-900 text-white" : "text-gray-700"}
     `}
   >
     {children}
@@ -72,7 +68,8 @@ export const EditorToolbar = ({
   onShareClick,
   addComment,
   yComments,
-  getSelectedCommentId
+  getSelectedCommentId,
+  resolveComment,
 }: ToolbarProps) => {
   if (!editorView) return null;
 
@@ -91,75 +88,80 @@ export const EditorToolbar = ({
     wrapIn(schema.nodes.blockquote)(state, dispatch);
 
   return (
-    <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-300 bg-[#edf2fa] sticky top-0 z-10 rounded-t-xl mx-4 mt-4">
-      {/* History */}
-      <div className="flex gap-1 border-r border-gray-300 pr-2 mr-2">
+    <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
+      <div className="flex items-center gap-1">
+        {/* History */}
+        <div className="flex gap-0.5 border-r border-gray-200 pr-3 mr-3">
+          <ToolbarButton
+            onClick={() => undo(state, dispatch)}
+            disabled={!undo(state)}
+          >
+            <Undo size={18} strokeWidth={2} />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => redo(state, dispatch)}
+            disabled={!redo(state)}
+          >
+            <Redo size={18} strokeWidth={2} />
+          </ToolbarButton>
+        </div>
+
+        {/* Formatting */}
         <ToolbarButton
-          onClick={() => undo(state, dispatch)}
-          disabled={!undo(state)}
+          onClick={toggleBold}
+          isActive={isMarkActive(state, schema.marks.strong)}
         >
-          <Undo size={18} />
+          <Bold size={18} strokeWidth={2} />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => redo(state, dispatch)}
-          disabled={!redo(state)}
+          onClick={toggleItalic}
+          isActive={isMarkActive(state, schema.marks.em)}
         >
-          <Redo size={18} />
+          <Italic size={18} strokeWidth={2} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={toggleCode}
+          isActive={isMarkActive(state, schema.marks.code)}
+        >
+          <Code size={18} strokeWidth={2} />
+        </ToolbarButton>
+
+        <div className="w-px h-5 bg-gray-200 mx-2" />
+
+        {/* Headings */}
+        <ToolbarButton onClick={toggleH1} isActive={false}>
+          <Heading1 size={18} strokeWidth={2} />
+        </ToolbarButton>
+        <ToolbarButton onClick={toggleH2} isActive={false}>
+          <Heading2 size={18} strokeWidth={2} />
+        </ToolbarButton>
+
+        <div className="w-px h-5 bg-gray-200 mx-2" />
+
+        {/* Lists */}
+        <ToolbarButton onClick={toggleBulletList} isActive={false}>
+          <List size={18} strokeWidth={2} />
+        </ToolbarButton>
+        <ToolbarButton onClick={toggleBlockquote} isActive={false}>
+          <Quote size={18} strokeWidth={2} />
         </ToolbarButton>
       </div>
 
-      {/* Formatting */}
-      <ToolbarButton
-        onClick={toggleBold}
-        isActive={isMarkActive(state, schema.marks.strong)}
-      >
-        <Bold size={18} />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={toggleItalic}
-        isActive={isMarkActive(state, schema.marks.em)}
-      >
-        <Italic size={18} />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={toggleCode}
-        isActive={isMarkActive(state, schema.marks.code)}
-      >
-        <Code size={18} />
-      </ToolbarButton>
-
-      <div className="w-px h-6 bg-gray-300 mx-1" />
-
-      {/* Headings */}
-      <ToolbarButton onClick={toggleH1} isActive={false}>
-        {" "}
-        {/* Checking heading active state is complex, skipped for brevity */}
-        <Heading1 size={18} />
-      </ToolbarButton>
-      <ToolbarButton onClick={toggleH2} isActive={false}>
-        <Heading2 size={18} />
-      </ToolbarButton>
-
-      <div className="w-px h-6 bg-gray-300 mx-1" />
-
-      {/* Lists */}
-      <ToolbarButton onClick={toggleBulletList} isActive={false}>
-        <List size={18} />
-      </ToolbarButton>
-      <ToolbarButton onClick={toggleBlockquote} isActive={false}>
-        <Quote size={18} />
-      </ToolbarButton>
-
-      <div className="flex justify-end">
+      <div className="flex items-center gap-3">
         <button
           onClick={onShareClick}
-          className="flex items-center gap-2 px-4 py-1.5 bg-[#c2e7ff] hover:bg-[#b3d7ef] text-[#001d35] rounded-full font-medium transition-all text-sm"
+          className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors text-sm"
         >
-          <Share2 size={16} />
+          <Share2 size={16} strokeWidth={2} />
           Share
         </button>
+        <CommentSidebar
+          addComment={addComment}
+          yComments={yComments}
+          getSelectedCommentId={getSelectedCommentId}
+          resolveComment={resolveComment}
+        />
       </div>
-      <CommentSidebar addComment={addComment} yComments={yComments} getSelectedCommentId={getSelectedCommentId} />
     </div>
   );
 };
